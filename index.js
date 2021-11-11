@@ -23,14 +23,16 @@ async function run() {
     const database = client.db("fourWings");
     const productsCollection = database.collection("products");
     const orderedProductsCollection = database.collection("orderedProducts");
+    const customerReviewsCollection = database.collection("customerReviews");
 
-    //Get products from DB
+    //Get limited products from DB
     app.get("/products", async (req, res) => {
       const cursor = productsCollection.find({});
       const products = await cursor.limit(6).toArray();
       res.send(products);
       console.log(products);
     });
+    //Get All products from DB
     app.get("/exploreAllProducts", async (req, res) => {
       const cursor = productsCollection.find({});
       const products = await cursor.toArray();
@@ -38,14 +40,14 @@ async function run() {
       console.log(products);
     });
 
-    //Post New Package  to DB
+    //Post New Products  to DB
     app.post("/addProducts", async (req, res) => {
       const products = req.body;
       const result = await productsCollection.insertOne(products);
       res.send(result);
     });
 
-    // //Get product info by id API
+    // //Get product info by id
     app.get("/productInfo/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -53,7 +55,7 @@ async function run() {
       res.send(result);
     });
 
-    //Post orderd Package to DB
+    //Post ordered products to DB
 
     app.post("/orders", async (req, res) => {
       const order = req.body;
@@ -62,21 +64,44 @@ async function run() {
       console.log(order, result);
     });
 
-    // //Get orderd Package from DB
-    // app.get("/bookedPackages", async (req, res) => {
-    //   const cursor = bookedPackageCollection.find({});
-    //   const bookedPackages = await cursor.toArray();
-    //   // console.log(bookedPackages);
-    //   res.send(bookedPackages);
-    // });
+    // //Get ordered products from DB
+    app.get("/orders", async (req, res) => {
+      const cursor = orderedProductsCollection.find({});
+      const result = await cursor.toArray();
 
-    // //Delete Booked Orders from Bookedpackage
-    // app.delete("/bookedPackages/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { _id: ObjectId(id) };
-    //   const result = await bookedPackageCollection.deleteOne(query);
-    //   res.send(result);
-    // });
+      res.send(result);
+    });
+    //Get order by user email
+    app.get("/myOrders", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      console.log(email);
+      const cursor = orderedProductsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //Post customers reviews to DB
+    app.post("/addReviews", async (req, res) => {
+      const reviews = req.body;
+      const result = await customerReviewsCollection.insertOne(reviews);
+      res.send(result);
+    });
+
+    //get customer reviews from DB
+    app.get("/reviews", async (req, res) => {
+      const cursor = customerReviewsCollection.find({});
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //Delete Booked Orders from orderedProductsCollection
+    app.delete("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await orderedProductsCollection.deleteOne(query);
+      res.send(result);
+    });
   } finally {
     // await client.close();
   }

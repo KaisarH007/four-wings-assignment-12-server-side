@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-
+    console.log(uri, "DATABASE CONNECTED");
     const database = client.db("fourWings");
     const productsCollection = database.collection("products");
     const orderedProductsCollection = database.collection("orderedProducts");
@@ -30,13 +30,14 @@ async function run() {
     app.get("/products", async (req, res) => {
       const cursor = productsCollection.find({});
       const products = await cursor.limit(6).toArray();
-      res.send(products);
+      res.json(products);
     });
+
     //Get All products from DB
     app.get("/exploreAllProducts", async (req, res) => {
       const cursor = productsCollection.find({});
       const products = await cursor.toArray();
-      res.send(products);
+      res.json(products);
     });
 
     //Post New Products  to DB
@@ -114,7 +115,7 @@ async function run() {
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
-      res.send(result);
+      res.json(result);
     });
 
     //Update user
@@ -125,17 +126,39 @@ async function run() {
       const updateDoc = { $set: user };
       const result = await usersCollection.updateOne(filter, updateDoc, option);
       res.json(result);
+    });
 
-      // //Make Admin
+    // //Make Admin
 
-      // app.put("/user/admin", async (req, res) => {
-      //   const user = req.body;
-      //   console.log("put", user);
-      //   const filter = { email: user.adminEmail };
-      //   const updateDoc = { $set: { role: "Admin" } };
-      //   const result = await usersCollection.updateOne(filter, updateDoc);
-      //   res.json(result);
-      // });
+    app.put("/user/admin", async (req, res) => {
+      const user = req.body.email;
+      console.log("put", user);
+      const filter = { email: user };
+      const updateDoc = { $set: { role: "admin" } };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.json(result);
+    });
+
+    //Get all Users
+    app.get("/allUsers", async (req, res) => {
+      console.log("hitting All users");
+      const cursor = usersCollection.find({});
+      const users = await cursor.toArray();
+      res.json(users);
+    });
+
+    //update status(need check)
+    app.put("/updateStatus/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateStatus = req.body.status;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = { $set: { status: "Approved" } };
+      const result = await orderedProductsCollection.updateOne(
+        filter,
+        updateDoc
+      );
+      res.send(result);
+      console.log(updateStatus);
     });
   } finally {
     // await client.close();
@@ -145,7 +168,7 @@ run().catch(console.dir);
 
 //test
 app.get("/", (req, res) => {
-  res.send("Assignment-12 server is running");
+  res.send("TEST Server Running");
 });
 
 app.listen(port, () => {
